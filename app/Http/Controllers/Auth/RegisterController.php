@@ -34,9 +34,14 @@ class RegisterController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function userRegister(Request $request)
+    public function
+
+
+
+
+    userRegister(Request $request)
     {
-        
+
         $this->validator($request->all())->validate();
 
         event(new Registered($user = $this->createOrUpdate($request->all())));
@@ -76,6 +81,16 @@ class RegisterController extends Controller
     }
 
     /**
+     * Get the guard to be used during registration.
+     *
+     * @return \Illuminate\Contracts\Auth\StatefulGuard
+     */
+    protected function guard()
+    {
+        return Auth::guard();
+    }
+
+    /**
      * Where to redirect users after registration.
      *
      * @var string
@@ -89,7 +104,7 @@ class RegisterController extends Controller
      * @return void
      */
     public function __construct()
-    {   
+    {
 
         $this->middleware('canRegister');
     }
@@ -112,7 +127,7 @@ class RegisterController extends Controller
             return Validator::make(
                 $data,
                 array_merge(
-                    $this->getValidator(Auth::user()->social),
+                    $this->getValidator(Auth::user()),
                     $this->getRecaptchaRules()
                 )
             );
@@ -123,7 +138,7 @@ class RegisterController extends Controller
     {
         return $social ?
         [
-            
+
         ]
         :
         [
@@ -150,15 +165,16 @@ class RegisterController extends Controller
      * @return model user
      */
     protected function createOrUpdate(array $data)
-    {   
-        $user = User::where('id' , Auth::user()->id)->first();
-        if (Auth::user()->social){
+    {
+
+        if (Auth::user()){
+            $user = User::where('id' , Auth::user()->id)->first();
             User::where('id', $user->id)->update([
                 'cpf' => only_numbers($data['cpf']),
                 'city_id' => $data['city_id'],
                 'uf' => $data['uf'],
             ]);
-            return $user;    
+            return $user;
         }
         return User::create([
             'name' => $data['name'],
@@ -178,7 +194,7 @@ class RegisterController extends Controller
     {
         // Request comes  from Register form
         \Session::put('last_auth_attempt', 'register');
-        
+
         redirect('auth.login');
 
         // If Captcha is OK, then register User Request
